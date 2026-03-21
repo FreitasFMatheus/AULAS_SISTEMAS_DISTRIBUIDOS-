@@ -1,0 +1,133 @@
+services:
+
+  # ── Broker ────────────────────────────────────────────────────────────────
+  broker:
+    build: ./broker
+    container_name: broker
+    ports:
+      - "5555:5555"
+      - "5556:5556"
+    networks:
+      - bbs-net
+
+  # ── Servidores Python ─────────────────────────────────────────────────────
+  servidor-py-1:
+    build: ./servidor
+    container_name: servidor-py-1
+    environment:
+      - SERVER_NAME=servidor-py-1
+      - BROKER_BACKEND=tcp://broker:5556
+    volumes:
+      - dados-servidor-py-1:/data
+    depends_on:
+      - broker
+    networks:
+      - bbs-net
+
+  servidor-py-2:
+    build: ./servidor
+    container_name: servidor-py-2
+    environment:
+      - SERVER_NAME=servidor-py-2
+      - BROKER_BACKEND=tcp://broker:5556
+    volumes:
+      - dados-servidor-py-2:/data
+    depends_on:
+      - broker
+    networks:
+      - bbs-net
+
+  # ── Servidores Lua ────────────────────────────────────────────────────────
+  servidor-lua-1:
+    build: ./servidor-lua
+    container_name: servidor-lua-1
+    environment:
+      - SERVER_NAME=servidor-lua-1
+      - BROKER_BACKEND=tcp://broker:5556
+    volumes:
+      - dados-servidor-lua-1:/data
+    depends_on:
+      - broker
+    networks:
+      - bbs-net
+
+  servidor-lua-2:
+    build: ./servidor-lua
+    container_name: servidor-lua-2
+    environment:
+      - SERVER_NAME=servidor-lua-2
+      - BROKER_BACKEND=tcp://broker:5556
+    volumes:
+      - dados-servidor-lua-2:/data
+    depends_on:
+      - broker
+    networks:
+      - bbs-net
+
+  # ── Bots Python ───────────────────────────────────────────────────────────
+  bot-py-1:
+    build: ./cliente
+    container_name: bot-py-1
+    environment:
+      - BOT_NAME=bot-alice-py
+      - BROKER_FRONTEND=tcp://broker:5555
+    depends_on:
+      - servidor-py-1
+      - servidor-py-2
+      - servidor-lua-1
+      - servidor-lua-2
+    networks:
+      - bbs-net
+
+  bot-py-2:
+    build: ./cliente
+    container_name: bot-py-2
+    environment:
+      - BOT_NAME=bot-bob-py
+      - BROKER_FRONTEND=tcp://broker:5555
+    depends_on:
+      - servidor-py-1
+      - servidor-py-2
+      - servidor-lua-1
+      - servidor-lua-2
+    networks:
+      - bbs-net
+
+  # ── Bots Lua ──────────────────────────────────────────────────────────────
+  bot-lua-1:
+    build: ./cliente-lua
+    container_name: bot-lua-1
+    environment:
+      - BOT_NAME=bot-alice-lua
+      - BROKER_FRONTEND=tcp://broker:5555
+    depends_on:
+      - servidor-py-1
+      - servidor-py-2
+      - servidor-lua-1
+      - servidor-lua-2
+    networks:
+      - bbs-net
+
+  bot-lua-2:
+    build: ./cliente-lua
+    container_name: bot-lua-2
+    environment:
+      - BOT_NAME=bot-bob-lua
+      - BROKER_FRONTEND=tcp://broker:5555
+    depends_on:
+      - servidor-py-1
+      - servidor-py-2
+      - servidor-lua-1
+      - servidor-lua-2
+    networks:
+      - bbs-net
+
+networks:
+  bbs-net:
+    driver: bridge
+
+volumes:
+  dados-servidor-py-1:
+  dados-servidor-py-2:
+  dados-servidor-lua-1:
+  dados-servidor-lua-2:
